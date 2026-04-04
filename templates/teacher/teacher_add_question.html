@@ -1,0 +1,219 @@
+{% extends 'teacher/teacherbase.html' %}
+{% load widget_tweaks %}
+{% block content %}
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <style>
+    a:link {
+      text-decoration: none;
+    }
+    .question-form {
+      margin-bottom: 20px;
+    }
+    .question-form .form-control {
+      width: 100%;
+      height: 42px;
+      font-size: 14px;
+    }
+    .question-form textarea.form-control {
+      height: 120px;
+      resize: vertical;
+    }
+    .question-form .option-fields .form-control {
+      height: 44px;
+    }
+    .question-form select.form-control,
+    .question-form .answer-field {
+      height: 60px;
+    }
+    .question-form label {
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<h2 style="text-align: center">Upload Exam Questions (Pending Admin Approval)</h2>
+{% if submitted %}
+<div class="alert alert-success" style="margin: 20px 100px 0">
+  Questions submitted for approval. You can add more below.
+</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger" style="margin: 20px 100px 0">
+  Submission failed. Please fill out the exam details and at least one full question.
+</div>
+{% endif %}
+{% if submit_error %}
+<div class="alert alert-danger" style="margin: 20px 100px 0">
+  Submission failed. Please fix the errors below.
+  <ul style="margin-top: 10px">
+    {% for field in bundle_form %}
+      {% for error in field.errors %}
+        <li>{{ field.label }}: {{ error }}</li>
+      {% endfor %}
+    {% endfor %}
+    {% for form in formset %}
+      {% for field in form %}
+        {% for error in field.errors %}
+          <li>{{ field.label }}: {{ error }}</li>
+        {% endfor %}
+      {% endfor %}
+    {% endfor %}
+    {% for error in formset.non_form_errors %}
+      <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+<form method="POST" autocomplete="off" style="margin: 40px 100px 0">
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  <div class="panel panel-default question-form">
+    <div class="panel-body">
+      <h4 style="margin-top: 0">Exam Questions</h4>
+      <div class="form-group">
+        <label>Exam Title</label>
+        {% render_field bundle_form.title class="form-control" placeholder="Example: Database Mid Exam 1" %}
+      </div>
+      <div class="form-group">
+        <label>Course</label>
+        {% render_field bundle_form.course class="form-control" %}
+      </div>
+      <div class="form-group">
+        <label>Session Time (minutes)</label>
+        {% render_field bundle_form.duration_minutes class="form-control" %}
+      </div>
+      <div class="form-group">
+        <label>Question Time (seconds)</label>
+        {% render_field bundle_form.per_question_seconds class="form-control" %}
+      </div>
+    </div>
+  </div>
+
+  <div id="question-forms">
+    {% for form in formset %}
+    <div class="panel panel-default question-form">
+      <div class="panel-body">
+        <div class="form-group">
+          <label>Question Type</label>
+          {% render_field form.question_type class="form-control question-type" %}
+        </div>
+        <div class="form-group">
+          <label>Question</label>
+          {% render_field form.question|attr:'required:true' class="form-control" placeholder="Write your question" %}
+        </div>
+        <div class="form-group">
+          <label>Marks</label>
+          {% render_field form.marks|attr:'required:true' class="form-control" placeholder="Example: 5" %}
+        </div>
+        <div class="form-group option-fields">
+          <label>Option 1</label>
+          {% render_field form.option1 class="form-control option1" %}
+          <label>Option 2</label>
+          {% render_field form.option2 class="form-control option2" %}
+          <label>Option 3</label>
+          {% render_field form.option3 class="form-control option3" %}
+          <label>Option 4</label>
+          {% render_field form.option4 class="form-control option4" %}
+        </div>
+        <div class="form-group">
+          <label>Correct Answer</label>
+          {% render_field form.answer|attr:'required:true' class="form-control answer-field" %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="form-group">
+    <button type="button" class="btn btn-default" id="add-question">Add another question</button>
+    <button type="submit" class="btn btn-primary btn-lg rounded-0" style="border-radius: 0%">Submit for Approval</button>
+  </div>
+</form>
+
+<div id="empty-form" style="display: none">
+  <div class="panel panel-default question-form">
+    <div class="panel-body">
+      <div class="form-group">
+        <label>Question Type</label>
+        {% render_field formset.empty_form.question_type class="form-control question-type" %}
+      </div>
+      <div class="form-group">
+        <label>Question</label>
+        {% render_field formset.empty_form.question|attr:'required:true' class="form-control" placeholder="Write your question" %}
+      </div>
+      <div class="form-group">
+        <label>Marks</label>
+        {% render_field formset.empty_form.marks|attr:'required:true' class="form-control" placeholder="Example: 5" %}
+      </div>
+      <div class="form-group option-fields">
+        <label>Option 1</label>
+        {% render_field formset.empty_form.option1 class="form-control option1" %}
+        <label>Option 2</label>
+        {% render_field formset.empty_form.option2 class="form-control option2" %}
+        <label>Option 3</label>
+        {% render_field formset.empty_form.option3 class="form-control option3" %}
+        <label>Option 4</label>
+        {% render_field formset.empty_form.option4 class="form-control option4" %}
+      </div>
+      <div class="form-group">
+        <label>Correct Answer</label>
+        {% render_field formset.empty_form.answer|attr:'required:true' class="form-control answer-field" %}
+      </div>
+    </div>
+  </div>
+</div>
+<br /><br /><br />
+<script>
+  (function () {
+    var totalForms = document.getElementById("id_form-TOTAL_FORMS");
+    var formContainer = document.getElementById("question-forms");
+    var emptyFormTemplate = document.getElementById("empty-form").innerHTML;
+    var addButton = document.getElementById("add-question");
+
+    function wireQuestionType(container) {
+      var select = container.querySelector(".question-type");
+      if (!select) return;
+      function applyType() {
+        var optionFields = container.querySelector(".option-fields");
+        var option1 = container.querySelector(".option1");
+        var option2 = container.querySelector(".option2");
+        var option3 = container.querySelector(".option3");
+        var option4 = container.querySelector(".option4");
+        if (select.value === "tf") {
+          if (option1) { option1.value = "True"; option1.readOnly = true; }
+          if (option2) { option2.value = "False"; option2.readOnly = true; }
+          if (option3) { option3.value = ""; option3.readOnly = true; }
+          if (option4) { option4.value = ""; option4.readOnly = true; }
+          if (optionFields) { optionFields.style.display = "none"; }
+        } else {
+          if (option1) { option1.readOnly = false; }
+          if (option2) { option2.readOnly = false; }
+          if (option3) { option3.readOnly = false; }
+          if (option4) { option4.readOnly = false; }
+          if (optionFields) { optionFields.style.display = "block"; }
+        }
+      }
+      select.addEventListener("change", applyType);
+      applyType();
+    }
+
+    function addForm() {
+      var formIndex = parseInt(totalForms.value, 10);
+      var newFormHtml = emptyFormTemplate.replace(/__prefix__/g, formIndex);
+      var wrapper = document.createElement("div");
+      wrapper.innerHTML = newFormHtml;
+      var newForm = wrapper.firstElementChild;
+      formContainer.appendChild(newForm);
+      totalForms.value = formIndex + 1;
+      wireQuestionType(newForm);
+    }
+
+    addButton.addEventListener("click", addForm);
+    Array.prototype.slice.call(formContainer.querySelectorAll(".question-form")).forEach(wireQuestionType);
+  })();
+</script>
+{% endblock content %}

@@ -1,0 +1,277 @@
+{% extends 'student/studentbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style media="screen">
+    a:link { text-decoration: none; }
+    .timer-box {
+      background: #f8f9fa;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      padding: 12px 18px;
+      margin-bottom: 18px;
+      font-size: 16px;
+      text-align: center;
+    }
+    .timer-box .timer-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .exam-progress {
+      text-align: center;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+    }
+    .question-card {
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      padding: 24px 20px;
+      margin: 0 auto 20px;
+      max-width: 640px;
+      background: #fff;
+      text-align: center;
+    }
+    .question-card p { margin-bottom: 10px; }
+    .question-card .options-wrap {
+      text-align: left;
+      max-width: 420px;
+      margin: 16px auto 0;
+    }
+    .question-card .radio { margin-bottom: 8px; text-align: left; }
+    .nav-exam {
+      text-align: center;
+      margin-top: 20px;
+      padding-bottom: 10px;
+    }
+    .nav-exam .btn { margin: 0 6px; min-width: 140px; border-radius: 0; }
+    #review-panel {
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    #review-panel .table { text-align: left; margin-top: 16px; }
+    #review-panel .table td:first-child { width: 40px; vertical-align: top; }
+    .review-actions { margin-top: 20px; }
+  </style>
+</head>
+<br><br>
+<div class="container">
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title" style="text-align:center;">Exam: {{ bundle.title }}</h6>
+    </div>
+    <div class="panel-body">
+      <div class="timer-box">
+        <div class="timer-row">
+          <span>Session time left: <strong id="session-timer"></strong></span>
+          <button type="button" class="btn btn-warning btn-sm" id="btn-end-exam-now" style="border-radius:0;">End exam now</button>
+        </div>
+      </div>
+
+      {% if questions %}
+      <form method="post" action="{% url 'student-submit-exam' bundle.id %}" id="exam-form">
+        {% csrf_token %}
+
+        <div id="question-steps-wrap">
+          {% for q in questions %}
+          <div class="exam-question-step question-card" data-qid="{{ q.id }}" data-qtext="{{ q.question|escapejs }}" {% if not forloop.first %}style="display:none;"{% endif %}>
+            <p><strong>Type:</strong> {{ q.get_question_type_display }}</p>
+            <p><strong>Question:</strong> {{ q.question }}</p>
+            <p><strong>Marks:</strong> {{ q.marks }}</p>
+
+            <div class="options-wrap">
+              {% if q.question_type == 'tf' %}
+                <div class="radio">
+                  <label><input type="radio" name="q_{{ q.id }}" value="True"> True</label>
+                </div>
+                <div class="radio">
+                  <label><input type="radio" name="q_{{ q.id }}" value="False"> False</label>
+                </div>
+              {% else %}
+                {% if q.option1 %}<div class="radio"><label><input type="radio" name="q_{{ q.id }}" value="Option1"> {{ q.option1 }}</label></div>{% endif %}
+                {% if q.option2 %}<div class="radio"><label><input type="radio" name="q_{{ q.id }}" value="Option2"> {{ q.option2 }}</label></div>{% endif %}
+                {% if q.option3 %}<div class="radio"><label><input type="radio" name="q_{{ q.id }}" value="Option3"> {{ q.option3 }}</label></div>{% endif %}
+                {% if q.option4 %}<div class="radio"><label><input type="radio" name="q_{{ q.id }}" value="Option4"> {{ q.option4 }}</label></div>{% endif %}
+              {% endif %}
+            </div>
+
+            <div class="nav-exam">
+              <button type="button" class="btn btn-default btn-prev-step">Previous</button>
+              {% if not forloop.last %}
+              <button type="button" class="btn btn-primary btn-next-step">Next question</button>
+              {% else %}
+              <button type="button" class="btn btn-primary btn-to-review">Review answers</button>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div id="review-panel" style="display:none;">
+          <h4 style="margin-top:0;">Review your answers</h4>
+          <p class="text-muted">Check everything looks correct. You can go back to change any answer.</p>
+          <table class="table table-bordered table-hover" id="review-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Your answer</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="review-actions">
+            <button type="button" class="btn btn-default" id="btn-back-to-questions">Back to questions</button>
+            <button type="submit" class="btn btn-success">Submit exam</button>
+          </div>
+        </div>
+      </form>
+      {% else %}
+      <p class="text-muted text-center">No approved questions available for this exam yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if questions %}
+<script>
+(function() {
+  var sessionSeconds = {{ bundle.duration_minutes }} * 60;
+  var sessionTimerEl = document.getElementById('session-timer');
+  var examForm = document.getElementById('exam-form');
+  var autoSubmitted = false;
+
+  function formatTime(totalSeconds) {
+    var m = Math.floor(totalSeconds / 60);
+    var s = totalSeconds % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function tickSession() {
+    if (sessionSeconds <= 0) {
+      sessionTimerEl.textContent = '00:00';
+      if (!autoSubmitted && examForm) {
+        autoSubmitted = true;
+        examForm.submit();
+      }
+      return;
+    }
+    sessionTimerEl.textContent = formatTime(sessionSeconds);
+    sessionSeconds -= 1;
+    setTimeout(tickSession, 1000);
+  }
+  tickSession();
+
+  var steps = Array.prototype.slice.call(document.querySelectorAll('.exam-question-step'));
+  var reviewPanel = document.getElementById('review-panel');
+  var wrap = document.getElementById('question-steps-wrap');
+  var current = 0;
+  var total = steps.length;
+
+  function addProgressBar() {
+    var el = document.createElement('div');
+    el.className = 'exam-progress';
+    el.id = 'exam-progress-text';
+    wrap.parentNode.insertBefore(el, wrap);
+  }
+  addProgressBar();
+  var progressEl = document.getElementById('exam-progress-text');
+
+  function updateProgress() {
+    if (progressEl) {
+      progressEl.textContent = 'Question ' + (current + 1) + ' of ' + total;
+    }
+  }
+  updateProgress();
+
+  function showQuestionIndex(idx) {
+    current = idx;
+    steps.forEach(function(el, i) {
+      el.style.display = i === idx ? 'block' : 'none';
+    });
+    var visible = steps[idx];
+    if (visible) {
+      var prevBtn = visible.querySelector('.btn-prev-step');
+      if (prevBtn) prevBtn.disabled = (idx === 0);
+    }
+    reviewPanel.style.display = 'none';
+    updateProgress();
+  }
+
+  function getSelectedLabelText(step) {
+    var qid = step.getAttribute('data-qid');
+    var sel = step.querySelector('input[name="q_' + qid + '"]:checked');
+    if (!sel) return '(not answered)';
+    var lab = sel.closest('label');
+    return lab ? lab.textContent.replace(/\s+/g, ' ').trim() : '(not answered)';
+  }
+
+  function fillReviewTable() {
+    var tbody = document.querySelector('#review-table tbody');
+    tbody.innerHTML = '';
+    steps.forEach(function(step, idx) {
+      var tr = document.createElement('tr');
+      var tdN = document.createElement('td');
+      var tdQ = document.createElement('td');
+      var tdA = document.createElement('td');
+      tdN.textContent = String(idx + 1);
+      tdQ.textContent = step.getAttribute('data-qtext') || '';
+      tdA.textContent = getSelectedLabelText(step);
+      tr.appendChild(tdN);
+      tr.appendChild(tdQ);
+      tr.appendChild(tdA);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function showReviewPanel() {
+    steps.forEach(function(s) { s.style.display = 'none'; });
+    reviewPanel.style.display = 'block';
+    if (progressEl) progressEl.textContent = 'Review';
+    fillReviewTable();
+  }
+
+  var btnEndNow = document.getElementById('btn-end-exam-now');
+  if (btnEndNow) {
+    btnEndNow.addEventListener('click', function() {
+      if (window.confirm('Go to review and submit? You can still change answers before clicking Submit exam.')) {
+        showReviewPanel();
+      }
+    });
+  }
+
+  steps.forEach(function(step) {
+    step.querySelector('.btn-prev-step').addEventListener('click', function() {
+      if (current > 0) showQuestionIndex(current - 1);
+    });
+    var nextBtn = step.querySelector('.btn-next-step');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function() {
+        if (current < total - 1) showQuestionIndex(current + 1);
+      });
+    }
+    var reviewBtn = step.querySelector('.btn-to-review');
+    if (reviewBtn) {
+      reviewBtn.addEventListener('click', function() {
+        showReviewPanel();
+      });
+    }
+  });
+
+  document.getElementById('btn-back-to-questions').addEventListener('click', function() {
+    showQuestionIndex(total - 1);
+  });
+
+  showQuestionIndex(0);
+})();
+</script>
+{% endif %}
+{% endblock content %}

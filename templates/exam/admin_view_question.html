@@ -1,0 +1,60 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+{%load static%}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+
+  <style media="screen">
+    a:link {
+      text-decoration: none;
+    }
+
+    h6 {
+      text-align: center;
+    }
+
+    .row {
+      margin: 100px;
+    }
+  </style>
+</head>
+<br><br>
+<div class="container">
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title">Questions by subject and exam</h6>
+    </div>
+    <p class="text-muted ml-3 mt-2">Click "View questions" to see questions and answers for an exam.</p>
+    <table class="table table-hover table-bordered" id="dev-table">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Exam name</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bundles %}
+        <tr>
+          <td>{{ b.course.course_name }}</td>
+          <td>{{ b.title }}</td>
+          <td class="text-center">
+            <a class="btn btn-info btn-xs" style="border-radius: 0%;" href="{% url 'admin-view-bundle-questions' b.id %}">
+              View questions
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="text-center">No approved exam bundles.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<br><br><br><br><br><br>
+{% endblock content %}
+

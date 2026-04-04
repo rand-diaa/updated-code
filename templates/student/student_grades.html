@@ -1,0 +1,58 @@
+{% extends 'student/studentbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style media="screen">
+    a:link { text-decoration: none; }
+    h6 { text-align: center; }
+    .row { margin: 100px; }
+  </style>
+</head>
+
+<br><br>
+<div class="container">
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title">Grades</h6>
+    </div>
+    <table class="table table-hover table-bordered" id="dev-table">
+      <thead>
+        <tr>
+          <th>Course</th>
+          <th>Your score</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+          <tr>
+            <td>{{ r.exam.course_name }}</td>
+            <td>
+              {% if r.total_possible_marks %}
+                <strong>{{ r.marks }}/{{ r.total_possible_marks }}</strong>
+              {% else %}
+                {{ r.marks }}
+              {% endif %}
+            </td>
+            <td>{{ r.date }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3" class="text-center text-muted">
+              <p style="margin:0;">No grades yet.</p>
+              <small>Go to Courses (for your year), open a subject, and take an active exam to get your result here.</small>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<br><br><br><br><br><br>
+{% endblock content %}
+

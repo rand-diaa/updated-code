@@ -1,0 +1,58 @@
+{% extends 'student/studentbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style media="screen">
+    a:link { text-decoration: none; }
+    h6 { text-align: center; }
+    .row { margin: 60px 100px; }
+    .course-card { border: 1px solid #ddd; border-radius: 6px; background: #fff; padding: 15px; margin-bottom: 15px; }
+    .course-title { font-weight: 700; font-size: 16px; margin: 0 0 6px; }
+    .course-meta { color: #777; font-size: 12px; margin-bottom: 10px; }
+    .badge-soft { display: inline-block; padding: 4px 8px; border-radius: 10px; font-size: 12px; }
+    .badge-active { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .badge-none { background: #f8f9fa; color: #6c757d; border: 1px solid #e9ecef; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  </style>
+</head>
+
+<br><br>
+<div class="container">
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title">Courses — {{ student.get_academic_year_display }}</h6>
+    </div>
+    <div class="panel-body">
+      {% for c in courses %}
+        <div class="course-card">
+          <div class="course-title">{{ c.course_name }}</div>
+          <div class="course-meta">
+            {% if c.active_exam_exists %}
+              <span class="badge-soft badge-active">Active exam available</span>
+            {% elif c.any_exam_exists %}
+              <span class="badge-soft badge-none">No active exam right now</span>
+            {% else %}
+              <span class="badge-soft badge-none">No exams for this course yet</span>
+            {% endif %}
+          </div>
+
+          <div class="actions">
+            <a class="btn btn-primary btn-sm" style="border-radius:0;" href="{% url 'student-course-detail' c.id %}">
+              Open
+            </a>
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-muted">No courses available yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<br><br><br><br>
+{% endblock content %}
+

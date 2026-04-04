@@ -1,0 +1,51 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+{%load static%}
+
+<head>
+  <style media="screen">
+    a:link {
+      text-decoration: none;
+    }
+
+    h6 {
+      text-align: center;
+    }
+
+    .row {
+      margin: 100px;
+    }
+  </style>
+</head>
+<br><br>
+<div class="container">
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title">Students</h6>
+    </div>
+    <table class="table table-hover table-bordered" id="dev-table">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Photo</th>
+          <th>Email</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      {% for t in students %}
+      <tr>
+        <td>{{ t.student_id|default:"—" }}</td>
+        <td> {{t.get_name}}</td>
+        <td>{% if t.profile_pic %}<img src="{% static t.profile_pic.url %}" alt="Profile Pic" height="40px" width="40px" />{% else %}—{% endif %}</td>
+        <td>{{t.email}}</td>
+        
+        <td class="text-center"><a class="btn btn-danger btn-xs" style="border-radius: 0%;" href="{% url 'delete-student' t.id  %}"><small class="fas fa-trash"></small></a></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+
+{% endblock content %}
+

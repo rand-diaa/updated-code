@@ -1,0 +1,192 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style media="screen">
+    a:link { text-decoration: none; }
+    h6 { text-align: center; }
+    .row { margin: 40px 60px 100px; }
+    .schedule-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; justify-content: center; margin-top: 8px; }
+    .schedule-form input[type="datetime-local"],
+    .schedule-form input[type="number"] { max-width: 200px; }
+    .section-title { margin-top: 28px; margin-bottom: 10px; font-weight: 700; color: #333; }
+    .muted { color: #777; font-size: 12px; }
+  </style>
+</head>
+<br><br>
+<div class="container">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if 'success' in message.tags %}alert-success{% elif 'error' in message.tags %}alert-danger{% elif 'warning' in message.tags %}alert-warning{% else %}alert-info{% endif %} alert-dismissible" style="border-radius:0;">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title">Manage Exams</h6>
+      <p class="muted" style="margin:8px 0 0;text-align:center;">Schedule times use your device clock in the form; start/end in the table use <strong>Asia/Baghdad</strong> (Iraq). Exams with status <strong>Ended</strong> had a window that already passed; use <strong>Update schedule</strong> or <strong>Clear schedule</strong> to run them again.</p>
+    </div>
+    <table class="table table-hover table-bordered" id="dev-table">
+      <thead>
+        <tr>
+          <th>Exam bundle</th>
+          <th>Course</th>
+          <th>Schedule</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bundles %}
+        <tr>
+          <td>{{ b.title }}</td>
+          <td>{{ b.course.course_name }}</td>
+          <td>
+            {% if b.uses_schedule %}
+              <div><strong>Starts:</strong> {{ b.scheduled_start }}</div>
+              <div><strong>Ends:</strong> {{ b.schedule_end }}</div>
+            {% else %}
+              <span class="text-muted">Not scheduled — manual Start/Stop</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if b.uses_schedule %}
+              {% if b.schedule_status_label == 'upcoming' %}
+                <span class="label label-info">Upcoming</span>
+              {% elif b.schedule_status_label == 'live' %}
+                <span class="label label-success">Live</span>
+              {% elif b.schedule_status_label == 'ended' %}
+                <span class="label label-default">Ended</span>
+              {% else %}
+                <span class="label label-default">—</span>
+              {% endif %}
+            {% else %}
+              {% if b.is_active %}
+                <span class="label label-success">Active (manual)</span>
+              {% else %}
+                <span class="label label-default">Inactive (manual)</span>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td class="text-center" style="min-width:220px;">
+            {% if b.uses_schedule %}
+              {% if b.schedule_status_label == 'live' %}
+              <form method="post" action="{% url 'end-scheduled-exam-session' b.id %}" style="display:inline; margin-bottom:6px;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-xs" style="border-radius:0;" onclick="return confirm('Close this exam session now? Students will no longer be able to start or submit.');">End session now</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{% url 'clear-exam-schedule' b.id %}" style="display:inline; margin-bottom:6px;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-default btn-xs" style="border-radius:0;" onclick="return confirm('Clear schedule? You can then use Start/Stop.');">Clear schedule</button>
+              </form>
+            {% else %}
+              {% if b.is_active %}
+                <a class="btn btn-warning btn-xs" style="border-radius:0;" href="{% url 'stop-exam' b.id %}"><span class="glyphicon glyphicon-pause"></span> Stop</a>
+              {% else %}
+                <a class="btn btn-success btn-xs" style="border-radius:0;" href="{% url 'start-exam' b.id %}"><span class="glyphicon glyphicon-play"></span> Start</a>
+              {% endif %}
+            {% endif %}
+            <form method="post" action="{% url 'set-exam-schedule' b.id %}" class="schedule-form"
+              {% if b.scheduled_start %}data-stored-iso="{{ b.scheduled_start.isoformat }}"{% endif %}>
+              {% csrf_token %}
+              <input type="hidden" name="scheduled_start_utc_ms" value="">
+              <input type="datetime-local" name="scheduled_start" required value="">
+              <span class="muted" style="align-self:center; margin:0 4px;">+</span>
+              <input type="number" name="duration_hours" min="1" max="500" title="Hours added to start time" placeholder="Hrs" value="{% if b.schedule_duration_hours %}{{ b.schedule_duration_hours }}{% else %}2{% endif %}" required style="width:70px;">
+              <span class="muted" style="align-self:center; font-size:11px;">hours</span>
+              <button type="submit" class="btn btn-primary btn-xs" style="border-radius:0;">{% if b.uses_schedule %}Update schedule{% else %}Set schedule{% endif %}</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted">No approved exam bundles in this list.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <h4 class="section-title">Previous exams</h4>
+  <p class="muted text-center">Ended scheduled windows or stopped manual sessions with submissions. Open an exam to see dates and every student’s answers.</p>
+  <div class="panel panel-default rounded-0">
+    <div class="panel-heading rounded-0" style="background:#5a5a5a; color:#fff;">
+      <h6 class="panel-title" style="color:#fff;">Previous exams</h6>
+    </div>
+    <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>Exam bundle</th>
+          <th>Course</th>
+          <th>Dates</th>
+          <th>Submissions</th>
+          <th style="min-width:140px;">Answers</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in previous_bundles %}
+        <tr>
+          <td>{{ b.title }}</td>
+          <td>{{ b.course.course_name }}</td>
+          <td>
+            {% if b.uses_schedule %}
+              <div><strong>Starts:</strong> {{ b.scheduled_start }}</div>
+              <div><strong>Ends:</strong> {{ b.effective_schedule_end }}</div>
+              {% if b.schedule_early_close_at %}
+                <div class="muted" style="margin-top:4px;">Closed early {{ b.schedule_early_close_at }}</div>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">Manual session</span>
+              {% if b.latest_submission %}
+                <div class="muted" style="margin-top:4px;">Last submission: {{ b.latest_submission }}</div>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td class="text-center">{{ b.submission_count }}</td>
+          <td class="text-center">
+            <a class="btn btn-primary btn-xs" style="border-radius:0;" href="{% url 'admin-exam-bundle-results' b.id %}">View answers &amp; marks</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted">No previous exams yet (nothing ended or stopped with a recorded attempt).</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<br><br><br><br>
+<script>
+(function() {
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function formatDatetimeLocal(d) {
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T' +
+      pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  document.querySelectorAll('form.schedule-form').forEach(function(form) {
+    var iso = form.getAttribute('data-stored-iso');
+    var dtInput = form.querySelector('input[name="scheduled_start"]');
+    if (iso && dtInput) {
+      var d = new Date(iso);
+      if (!isNaN(d.getTime())) dtInput.value = formatDatetimeLocal(d);
+    }
+    form.addEventListener('submit', function() {
+      var hidden = form.querySelector('input[name="scheduled_start_utc_ms"]');
+      var inp = form.querySelector('input[name="scheduled_start"]');
+      if (!hidden || !inp || !inp.value) return;
+      var m = inp.value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+      if (!m) return;
+      var y = +m[1], mo = +m[2] - 1, day = +m[3], h = +m[4], mi = +m[5], s = m[6] ? +m[6] : 0;
+      var localD = new Date(y, mo, day, h, mi, s);
+      hidden.value = String(localD.getTime());
+    }, true);
+  });
+})();
+</script>
+{% endblock content %}

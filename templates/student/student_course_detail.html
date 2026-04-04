@@ -1,0 +1,81 @@
+{% extends 'student/studentbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style media="screen">
+    a:link { text-decoration: none; }
+    h6 { text-align: center; }
+    .row { margin: 60px 100px; }
+    .header-box { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .course-name { font-weight: 800; font-size: 18px; margin: 0; }
+    .muted { color:#777; }
+  </style>
+</head>
+
+<br><br>
+<div class="container">
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title">Course</h6>
+    </div>
+    <div class="panel-body">
+      <div class="header-box" style="margin-bottom:15px;">
+        <div>
+          <p class="course-name">{{ course.course_name }}</p>
+          <span class="label label-info">{{ student.get_academic_year_display }}</span>
+        </div>
+      </div>
+
+      <hr style="margin:15px 0;">
+
+      <h5 style="margin-top:0;">Active Exams</h5>
+      {% if active_bundles %}
+        <table class="table table-hover table-bordered">
+          <thead>
+            <tr>
+              <th>Exam</th>
+              <th>Total Questions</th>
+              <th>Total Marks</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in active_bundles %}
+              <tr>
+                <td>{{ b.title }}</td>
+                <td>{{ b.total_questions }}</td>
+                <td>{{ b.total_marks }}</td>
+                <td><span class="label label-success">Active</span></td>
+                <td class="text-center">
+                  {% if has_submitted_course %}
+                    <span class="label label-default">Submitted</span>
+                    <a class="btn btn-default btn-xs" style="border-radius:0; margin-left:6px;" href="{% url 'student-grades' %}">View grade</a>
+                  {% else %}
+                    <a class="btn btn-success btn-xs" style="border-radius:0;" href="{% url 'student-start-exam' b.id %}">Start</a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        {% if any_exam_exists %}
+          <p class="muted">No active exam right now for this course.</p>
+        {% else %}
+          <p class="muted">No exams created for this course yet.</p>
+        {% endif %}
+      {% endif %}
+
+      <a class="btn btn-default btn-sm" style="border-radius:0; margin-top:10px;" href="{% url 'student-courses' %}">Back to Courses</a>
+    </div>
+  </div>
+</div>
+
+<br><br><br><br>
+{% endblock content %}
+

@@ -1,0 +1,165 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <style>
+    .bundle-header {
+      background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+      color: white;
+      padding: 1rem 1.25rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .question-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .question-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .question-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+    }
+    .question-type-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .question-type-badge.mcq { background: #e3f2fd; color: #1565c0; }
+    .question-type-badge.tf { background: #f3e5f5; color: #6a1b9a; }
+    .question-marks {
+      font-size: 0.875rem;
+      color: #5f6368;
+    }
+    .question-body {
+      padding: 1.25rem;
+    }
+    .question-text {
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 1rem;
+      color: #202124;
+    }
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .options-list li {
+      padding: 0.6rem 0.75rem;
+      margin-bottom: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #e8eaed;
+      background: #fafafa;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .options-list li.correct-option {
+      background: #e8f5e9;
+      border-color: #81c784;
+      font-weight: 500;
+    }
+    .options-list li.correct-option::before {
+      content: "✓";
+      color: #2e7d32;
+      font-weight: bold;
+    }
+    .option-label {
+      font-size: 0.8rem;
+      color: #5f6368;
+      min-width: 3rem;
+    }
+    .tf-answer {
+      display: inline-block;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-weight: 500;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #81c784;
+    }
+    .question-actions {
+      padding: 0.75rem 1.25rem;
+      border-top: 1px solid #eee;
+      background: #fafafa;
+    }
+  </style>
+</head>
+<br><br>
+<div class="container">
+  <div class="rounded overflow-hidden" style="max-width: 900px; margin: 0 auto;">
+    <div class="bundle-header">
+      {{ bundle.course.course_name }} — {{ bundle.title }}
+    </div>
+    {% if bundle.status == 'pending' %}
+    <div class="p-3 bg-light border-bottom d-flex flex-wrap" style="gap: 0.5rem;">
+      <a class="btn btn-success btn-sm" href="{% url 'approve-bundle' bundle.id %}">Approve bundle</a>
+      <a class="btn btn-danger btn-sm" href="{% url 'reject-bundle' bundle.id %}">Reject bundle</a>
+      <a class="btn btn-secondary btn-sm" href="{% url 'admin-view-pending-bundle' %}">Back to pending bundles</a>
+    </div>
+    {% endif %}
+    <div class="p-3">
+      {% for q in questions %}
+      <div class="question-card">
+        <div class="question-meta">
+          <span class="question-type-badge {{ q.question_type }}">{{ q.get_question_type_display }}</span>
+          <span class="question-marks">{{ q.marks }} mark{{ q.marks|pluralize }}</span>
+          {% if bundle.status == 'approved' %}
+          <span class="ml-auto">
+            <a class="btn btn-danger btn-sm" href="{% url 'delete-question' q.id %}"><i class="fa fa-trash"></i> Delete</a>
+          </span>
+          {% endif %}
+        </div>
+        <div class="question-body">
+          <div class="question-text">{{ q.question }}</div>
+          {% if q.question_type == 'mcq' %}
+          <ul class="options-list">
+            {% if q.option1 %}
+            <li class="{% if q.answer == 'Option1' %}correct-option{% endif %}">
+              <span class="option-label">A.</span> {{ q.option1 }}
+            </li>
+            {% endif %}
+            {% if q.option2 %}
+            <li class="{% if q.answer == 'Option2' %}correct-option{% endif %}">
+              <span class="option-label">B.</span> {{ q.option2 }}
+            </li>
+            {% endif %}
+            {% if q.option3 %}
+            <li class="{% if q.answer == 'Option3' %}correct-option{% endif %}">
+              <span class="option-label">C.</span> {{ q.option3 }}
+            </li>
+            {% endif %}
+            {% if q.option4 %}
+            <li class="{% if q.answer == 'Option4' %}correct-option{% endif %}">
+              <span class="option-label">D.</span> {{ q.option4 }}
+            </li>
+            {% endif %}
+          </ul>
+          {% else %}
+          <div class="tf-answer">Answer: {{ q.answer }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-muted text-center py-4">No questions in this bundle.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<br><br><br><br>
+{% endblock content %}
+
+
