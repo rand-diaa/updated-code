@@ -109,8 +109,15 @@ def student_course_detail_view(request, course_id):
     ).order_by('title')
     active_bundles = [b for b in candidates if b.is_effectively_active()]
 
+    # Find which bundles the student has already submitted
+    submitted_bundle_ids = set(QMODEL.Result.objects.filter(
+        student=student, exam=course, bundle__isnull=False
+    ).values_list('bundle_id', flat=True))
+
+    for b in active_bundles:
+        b.has_submitted = b.id in submitted_bundle_ids
+
     any_exam_exists = QMODEL.ExamBundle.objects.filter(course=course, status='approved').exists()
-    has_submitted_course = QMODEL.Result.objects.filter(student=student, exam=course).exists()
 
     return render(
         request,
@@ -120,7 +127,6 @@ def student_course_detail_view(request, course_id):
             'student': student,
             'active_bundles': active_bundles,
             'any_exam_exists': any_exam_exists,
-            'has_submitted_course': has_submitted_course,
         },
     )
 
@@ -135,7 +141,7 @@ def student_start_exam_view(request, pk):
     if not bundle.is_effectively_active():
         messages.warning(request, 'This exam is not open right now.')
         return redirect('student-course-detail', course_id=bundle.course_id)
-    if QMODEL.Result.objects.filter(student=student, exam=bundle.course).exists():
+    if QMODEL.Result.objects.filter(student=student, bundle=bundle).exists():
         messages.info(request, 'You have already submitted this course exam. Retakes are not allowed.')
         return redirect('student-grades')
     questions = QMODEL.Question.objects.filter(bundle=bundle, status='approved')
@@ -156,7 +162,7 @@ def student_submit_exam_view(request, pk):
         messages.warning(request, 'This exam is no longer open. Your answers were not saved.')
         return redirect('student-course-detail', course_id=bundle.course_id)
 
-    if QMODEL.Result.objects.filter(student=student, exam=bundle.course).exists():
+    if QMODEL.Result.objects.filter(student=student, bundle=bundle).exists():
         messages.warning(request, 'You have already submitted this course exam.')
         return redirect('student-grades')
 

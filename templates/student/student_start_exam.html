@@ -271,6 +271,72 @@
   });
 
   showQuestionIndex(0);
+
+  // --- ANTI-CHEATING FEATURES ---
+
+  // 1. Tab-Switching Detection (Visibility API)
+  var warningCount = 0;
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      warningCount++;
+      if (warningCount > 3) {
+        alert("You have left the exam tab too many times. Your exam will now automatically submit.");
+        if (!autoSubmitted && examForm) {
+          autoSubmitted = true;
+          examForm.submit();
+        }
+      } else {
+        alert("Warning: Please do not leave the exam page. You have left " + warningCount + " time(s). After 3 times, your exam will auto-submit.");
+      }
+    }
+  });
+
+  // 2. Disable Right-Click, Copy, and Paste
+  document.addEventListener('contextmenu', function(event) { event.preventDefault(); });
+  document.addEventListener('copy', function(event) { event.preventDefault(); });
+  document.addEventListener('paste', function(event) { event.preventDefault(); });
+
+  // 3. Full-Screen Enforcement
+  var fsOverlay = document.createElement('div');
+  fsOverlay.id = 'fs-overlay';
+  fsOverlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:9999;color:white;display:flex;align-items:center;justify-content:center;flex-direction:column;';
+  fsOverlay.innerHTML = '<h2>Exam Security Mode</h2><p style="margin-bottom:20px;font-size:16px;">You must take this exam in Full Screen mode.</p><button id="btn-start-fs" class="btn btn-primary btn-lg">Enter Full Screen to Start</button>';
+  document.body.appendChild(fsOverlay);
+
+  var btnStartFs = document.getElementById('btn-start-fs');
+
+  function enterFullScreen() {
+    var elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(function(err) { console.log(err); });
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    }
+  }
+
+  btnStartFs.addEventListener('click', function() {
+    enterFullScreen();
+  });
+
+  function checkFS() {
+    var isFS = document.fullscreenElement || document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement;
+    if (!isFS) {
+      fsOverlay.style.display = 'flex';
+      fsOverlay.querySelector('h2').textContent = 'Exam Paused';
+      fsOverlay.querySelector('p').textContent = 'You left full-screen mode. You must return to full-screen to continue.';
+      btnStartFs.textContent = 'Return to Exam';
+    } else {
+      fsOverlay.style.display = 'none';
+    }
+  }
+
+  document.addEventListener('fullscreenchange', checkFS);
+  document.addEventListener('webkitfullscreenchange', checkFS);
+  document.addEventListener('mozfullscreenchange', checkFS);
+  document.addEventListener('MSFullscreenChange', checkFS);
+
 })();
 </script>
 {% endif %}

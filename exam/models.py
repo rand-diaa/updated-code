@@ -176,7 +176,7 @@ class Result(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['student', 'exam'], name='unique_student_course_result'),
+            models.UniqueConstraint(fields=['student', 'exam', 'bundle'], name='unique_student_exam_bundle_result'),
         ]
 
 

@@ -7,6 +7,7 @@ This is a comprehensively featured Django-based Online Examination System. It pr
 1. **Admin Panel**: For staff members to manage teachers, students, exam courses, and track overall scores. They also define exam schedules or manually start and stop live exam sessions.
 2. **Teacher Portal**: Allows teachers to register, securely create exams/questions subject-by-subject, verify results, and monitor students.
 3. **Student Portal**: Provides an accessible dashboard for students to view their subjects, start available active exams (Multiple Choice / True-False), and review their academic standing and grades.
+Submitted   - **Anti-Cheating Implementation:** The exam interface comes with strict Javascript constraints including Tab-Switching detection (forces auto-submit if focus is lost >3 times), Full-Screen enforcement (pauses the exam if exited), and disabling of Right-Click/Copy/Paste.
 
 The application is built primarily using Python and Django.
 

@@ -52,7 +52,7 @@
                 <td>{{ b.total_marks }}</td>
                 <td><span class="label label-success">Active</span></td>
                 <td class="text-center">
-                  {% if has_submitted_course %}
+                  {% if b.has_submitted %}
                     <span class="label label-default">Submitted</span>
                     <a class="btn btn-default btn-xs" style="border-radius:0; margin-left:6px;" href="{% url 'student-grades' %}">View grade</a>
                   {% else %}
