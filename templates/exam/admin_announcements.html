@@ -1,0 +1,92 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    a:link { text-decoration: none; }
+    .announcement-card {
+      background: #fff;
+      border: 1px solid #dce3ea;
+      border-radius: 4px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .announcement-card h5 {
+      margin: 0 0 6px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+    .announcement-card p {
+      margin: 0 0 8px;
+      color: #555;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+    .announcement-meta {
+      font-size: 11px;
+      color: #aaa;
+    }
+  </style>
+</head>
+
+<br><br>
+<div class="container">
+
+  <!-- New Announcement Form -->
+  <div class="panel panel-primary rounded-0" style="margin-bottom:24px;">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title" style="text-align:center;">Post New Announcement</h6>
+    </div>
+    <div class="panel-body">
+      <form method="POST" action="{% url 'admin-announcements' %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" class="form-control" placeholder="Announcement title" required maxlength="200">
+        </div>
+        <div class="form-group">
+          <label for="body">Message</label>
+          <textarea id="body" name="body" class="form-control" rows="4" placeholder="Write the announcement here..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span> Post Announcement
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Existing Announcements -->
+  <div class="panel panel-default rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title" style="text-align:center;">All Announcements</h6>
+    </div>
+    <div class="panel-body">
+      {% for ann in announcements %}
+      <div class="announcement-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div style="flex:1;">
+            <h5>{{ ann.title }}</h5>
+            <p>{{ ann.body }}</p>
+            <span class="announcement-meta">Posted: {{ ann.created_at|date:"N j, Y, g:i a" }}</span>
+          </div>
+          <div style="margin-left:16px;">
+            <a href="{% url 'delete-announcement' ann.id %}"
+               class="btn btn-danger btn-xs"
+               onclick="return confirm('Delete this announcement?');">
+              <span class="glyphicon glyphicon-trash"></span> Delete
+            </a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-center text-muted">No announcements yet. Use the form above to post one.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+<br><br><br><br>
+{% endblock content %}

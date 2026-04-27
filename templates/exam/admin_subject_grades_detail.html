@@ -1,0 +1,92 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style>
+    a:link { text-decoration: none; }
+    .grade-A { color: #1a7a1a; font-weight: 700; }
+    .grade-B { color: #2a6496; font-weight: 700; }
+    .grade-C { color: #d58512; font-weight: 700; }
+    .grade-D { color: #c87137; font-weight: 700; }
+    .grade-E { color: #c0392b; font-weight: 700; }
+    .grade-F { color: #922b21; font-weight: 700; }
+    .dash { color: #aaa; }
+  </style>
+</head>
+
+<br><br>
+<div class="container">
+  <p>
+    <a href="{% url 'admin-subject-grades-year' course.academic_year %}">&larr; Back to {{ course.get_academic_year_display }} Subjects</a>
+    &nbsp;&nbsp;
+    <a href="{% url 'admin-export-grades' course.id %}" class="btn btn-success btn-xs" style="border-radius:3px;">
+      <span class="glyphicon glyphicon-download-alt"></span> Export CSV
+    </a>
+  </p>
+
+  {% if stats.total %}
+  <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+    <div style="flex:1; min-width:120px; background:#f7f9fc; border:1px solid #dce3ea; border-radius:4px; padding:12px 16px; text-align:center;">
+      <div style="font-size:11px; color:#777; text-transform:uppercase; letter-spacing:.5px;">Total Students</div>
+      <div style="font-size:22px; font-weight:700; color:#333;">{{ stats.total }}</div>
+    </div>
+    <div style="flex:1; min-width:120px; background:#f0faf4; border:1px solid #b2dfcc; border-radius:4px; padding:12px 16px; text-align:center;">
+      <div style="font-size:11px; color:#777; text-transform:uppercase; letter-spacing:.5px;">Pass</div>
+      <div style="font-size:22px; font-weight:700; color:#1a7a1a;">{{ stats.pass }}</div>
+    </div>
+    <div style="flex:1; min-width:120px; background:#fff5f5; border:1px solid #f5c6c6; border-radius:4px; padding:12px 16px; text-align:center;">
+      <div style="font-size:11px; color:#777; text-transform:uppercase; letter-spacing:.5px;">Fail</div>
+      <div style="font-size:22px; font-weight:700; color:#922b21;">{{ stats.fail }}</div>
+    </div>
+    <div style="flex:1; min-width:120px; background:#f7f9fc; border:1px solid #dce3ea; border-radius:4px; padding:12px 16px; text-align:center;">
+      <div style="font-size:11px; color:#777; text-transform:uppercase; letter-spacing:.5px;">Class Average</div>
+      <div style="font-size:22px; font-weight:700; color:#2a6496;">{% if stats.average %}{{ stats.average }}{% else %}—{% endif %}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title" style="text-align:center;">
+        {{ course.course_name }} &mdash; {{ course.get_academic_year_display }}
+      </h6>
+      <p style="text-align:center; margin:6px 0 0; font-size:12px; color:rgba(255,255,255,0.85);">
+        Mid exams are out of 40 &nbsp;|&nbsp; Final exams are out of 60 &nbsp;|&nbsp; Total is out of 100
+      </p>
+    </div>
+    <table class="table table-hover table-bordered" style="margin-bottom:0;">
+      <thead>
+        <tr style="background:#f5f5f5;">
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Mid (/ 40)</th>
+          <th>Final (/ 60)</th>
+          <th>Total (/ 100)</th>
+          <th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.student.student_id|default:"—" }}</td>
+          <td>{{ row.student.get_name }}</td>
+          <td>{% if row.mid is not None %}{{ row.mid }}{% else %}<span class="dash">—</span>{% endif %}</td>
+          <td>{% if row.final is not None %}{{ row.final }}{% else %}<span class="dash">—</span>{% endif %}</td>
+          <td><strong>{{ row.total }}</strong></td>
+          <td><span class="grade-{{ row.grade }}">{{ row.grade }}</span></td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted">No grades recorded for this subject yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<br><br><br><br>
+{% endblock content %}

@@ -1,0 +1,145 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <style>
+    a:link { text-decoration: none; }
+    .mastersheet-wrap {
+      overflow-x: auto;
+      width: 100%;
+    }
+    .mastersheet-wrap table {
+      min-width: 100%;
+      white-space: nowrap;
+    }
+    .subject-header {
+      text-align: center;
+      background: #2c3e50;
+      color: #fff;
+      font-weight: 600;
+      border-right: 2px solid #fff !important;
+    }
+    .sub-header {
+      background: #f5f7fa;
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+    }
+    .grade-A { color: #1a7a1a; font-weight: 700; }
+    .grade-B { color: #2a6496; font-weight: 700; }
+    .grade-C { color: #d58512; font-weight: 700; }
+    .grade-D { color: #c87137; font-weight: 700; }
+    .grade-E { color: #c0392b; font-weight: 700; }
+    .grade-F { color: #922b21; font-weight: 700; }
+    .dash { color: #bbb; }
+    td.subject-sep { border-right: 2px solid #ccc !important; }
+  </style>
+</head>
+
+<br><br>
+<div class="container-fluid" style="padding: 0 24px;">
+  <p>
+    <a href="{% url 'admin-subject-grades' %}">&larr; Back to Years</a>
+  </p>
+
+  <!-- Subjects List Panel -->
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title" style="text-align:center;">{{ year_label }} — Subjects</h6>
+      <p style="text-align:center; margin:6px 0 0; font-size:12px; color:rgba(255,255,255,0.85);">
+        Select a subject to view individual student grades
+      </p>
+    </div>
+    <table class="table table-hover table-bordered" style="margin-bottom:0;">
+      <thead>
+        <tr style="background:#f5f5f5;">
+          <th>Subject</th>
+          <th style="width:160px; text-align:center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for course in courses %}
+        <tr>
+          <td>{{ course.course_name }}</td>
+          <td class="text-center">
+            <a class="btn btn-primary btn-xs" style="border-radius:0;"
+               href="{% url 'admin-subject-grades-detail' course.id %}">
+              <span class="glyphicon glyphicon-list-alt"></span> View Grades
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="2" class="text-center text-muted">
+            No subjects found for {{ year_label }}.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mastersheet Panel -->
+  <div class="panel panel-default rounded-0" style="margin-top:24px;">
+    <div class="panel-heading rounded-0" style="background:linear-gradient(135deg,#2c3e50 0%,#34495e 100%); color:#fff; display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <strong style="font-size:14px;">Mastersheet — {{ year_label }}</strong>
+        <span style="font-size:12px; margin-left:10px; color:rgba(255,255,255,0.75);">All students &amp; all subjects in one view</span>
+      </div>
+      <a href="{% url 'admin-export-mastersheet' year %}"
+         class="btn btn-success btn-xs" style="border-radius:3px;">
+        <span class="glyphicon glyphicon-download-alt"></span> Export CSV
+      </a>
+    </div>
+
+    {% if students_sheet and courses %}
+    <div class="mastersheet-wrap">
+      <table class="table table-bordered table-hover" style="margin-bottom:0; font-size:13px;">
+        <thead>
+          <!-- Row 1: subject group headers -->
+          <tr>
+            <th rowspan="2" style="vertical-align:middle; background:#f5f7fa;">Student ID</th>
+            <th rowspan="2" style="vertical-align:middle; background:#f5f7fa;">Name</th>
+            {% for course in courses %}
+            <th colspan="4" class="subject-header">{{ course.course_name }}</th>
+            {% endfor %}
+          </tr>
+          <!-- Row 2: sub-column headers -->
+          <tr>
+            {% for course in courses %}
+            <th class="sub-header">Mid<br><small>(/40)</small></th>
+            <th class="sub-header">Final<br><small>(/60)</small></th>
+            <th class="sub-header">Total<br><small>(/100)</small></th>
+            <th class="sub-header subject-sep">Grade</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in students_sheet %}
+          <tr>
+            <td>{{ row.student.student_id|default:"—" }}</td>
+            <td>{{ row.student.get_name }}</td>
+            {% for g in row.grades %}
+            <td class="text-center">{% if g.mid is not None %}{{ g.mid }}{% else %}<span class="dash">—</span>{% endif %}</td>
+            <td class="text-center">{% if g.final is not None %}{{ g.final }}{% else %}<span class="dash">—</span>{% endif %}</td>
+            <td class="text-center"><strong>{% if g.mid is not None or g.final is not None %}{{ g.total }}{% else %}<span class="dash">—</span>{% endif %}</strong></td>
+            <td class="text-center subject-sep"><span class="grade-{{ g.grade }}">{{ g.grade }}</span></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% elif not courses %}
+    <div class="panel-body text-center text-muted">No subjects have been added for {{ year_label }} yet.</div>
+    {% else %}
+    <div class="panel-body text-center text-muted">No students are registered in {{ year_label }} yet.</div>
+    {% endif %}
+  </div>
+
+</div>
+<br><br><br><br>
+{% endblock content %}

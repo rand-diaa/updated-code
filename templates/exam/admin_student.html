@@ -1,0 +1,67 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style>
+    a:link { text-decoration: none; }
+  </style>
+</head>
+
+<br><br>
+<div class="container">
+  <div class="panel panel-primary rounded-0">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title" style="text-align:center;">Student Section</h6>
+      <p style="text-align:center; margin:6px 0 0; font-size:12px; color:rgba(255,255,255,0.85);">
+        Select an academic year to view students and their grades
+      </p>
+    </div>
+    <table class="table table-hover table-bordered" style="margin-bottom:0;">
+      <thead>
+        <tr style="background:#f7f9fc;">
+          <th>Academic Year</th>
+          <th style="width:160px; text-align:center;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Year 1</strong></td>
+          <td class="text-center">
+            <a class="btn btn-primary btn-xs" style="border-radius:3px;" href="{% url 'admin-students-year' 1 %}">
+              <span class="glyphicon glyphicon-user"></span> View Students
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Year 2</strong></td>
+          <td class="text-center">
+            <a class="btn btn-primary btn-xs" style="border-radius:3px;" href="{% url 'admin-students-year' 2 %}">
+              <span class="glyphicon glyphicon-user"></span> View Students
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Year 3</strong></td>
+          <td class="text-center">
+            <a class="btn btn-primary btn-xs" style="border-radius:3px;" href="{% url 'admin-students-year' 3 %}">
+              <span class="glyphicon glyphicon-user"></span> View Students
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Year 4</strong></td>
+          <td class="text-center">
+            <a class="btn btn-primary btn-xs" style="border-radius:3px;" href="{% url 'admin-students-year' 4 %}">
+              <span class="glyphicon glyphicon-user"></span> View Students
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<br><br><br><br>
+{% endblock content %}

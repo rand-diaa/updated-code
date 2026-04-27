@@ -1,0 +1,179 @@
+{% extends 'student/studentbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <style>
+    a:link { text-decoration: none; }
+
+    .course-panel {
+      border: 1px solid #dce3ea;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .course-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px 18px;
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      color: #fff;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .course-header:hover {
+      background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
+    }
+
+    .course-header .course-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .course-header .course-meta {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      margin-top: 2px;
+    }
+
+    .course-header .toggle-icon {
+      font-size: 14px;
+      transition: transform 0.2s;
+    }
+
+    .course-header.open .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .course-body {
+      display: none;
+      background: #fff;
+    }
+
+    .course-body table {
+      margin-bottom: 0;
+    }
+
+    .badge-mid {
+      background: #2a6496;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-final {
+      background: #5a3e8a;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-unknown {
+      background: #888;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    .score-cell { font-weight: 700; color: #2c3e50; }
+  </style>
+</head>
+
+<br><br>
+<div class="container">
+
+  <div class="panel panel-primary rounded-0" style="margin-bottom:0;">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title" style="text-align:center;">My Grades</h6>
+    </div>
+  </div>
+
+  <div style="margin-top:10px;">
+    {% for group in course_groups %}
+    <div class="course-panel">
+      <div class="course-header" onclick="toggleCourse(this)">
+        <div>
+          <div class="course-name">{{ group.course.course_name }}</div>
+          <div class="course-meta">{{ group.entries|length }} exam{{ group.entries|length|pluralize }} taken</div>
+        </div>
+        <span class="glyphicon glyphicon-chevron-down toggle-icon"></span>
+      </div>
+      <div class="course-body">
+        <table class="table table-hover table-bordered" style="margin-bottom:0;">
+          <thead>
+            <tr style="background:#f5f7fa;">
+              <th>Type</th>
+              <th>Your Score</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in group.entries %}
+            <tr>
+              <td>
+                {% if r.bundle %}
+                  {% if r.bundle.exam_type == 'mid' %}
+                    <span class="badge-mid">Mid Exam</span>
+                  {% elif r.bundle.exam_type == 'final' %}
+                    <span class="badge-final">Final Exam</span>
+                  {% else %}
+                    <span class="badge-unknown">{{ r.exam_type_display }}</span>
+                  {% endif %}
+                {% else %}
+                  <span class="badge-unknown">—</span>
+                {% endif %}
+              </td>
+              <td class="score-cell">
+                {% if r.total_possible_marks %}
+                  {{ r.marks }}/{{ r.total_possible_marks }}
+                {% else %}
+                  {{ r.marks }}
+                {% endif %}
+              </td>
+              <td>{{ r.date }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% empty %}
+    <div class="panel panel-default rounded-0">
+      <div class="panel-body text-center text-muted">
+        <p style="margin:0;">No grades yet.</p>
+        <small>Go to Courses, open a subject, and take an active exam to see your results here.</small>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<script>
+  function toggleCourse(header) {
+    var body = header.nextElementSibling;
+    var isOpen = header.classList.contains('open');
+    if (isOpen) {
+      header.classList.remove('open');
+      body.style.display = 'none';
+    } else {
+      header.classList.add('open');
+      body.style.display = 'block';
+    }
+  }
+</script>
+
+<br><br><br><br><br><br>
+{% endblock content %}

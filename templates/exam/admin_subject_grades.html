@@ -1,0 +1,65 @@
+{% extends 'exam/adminbase.html' %}
+{% block content %}
+{% load static %}
+
+<head>
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  <style>
+    a:link { text-decoration: none; }
+    .year-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      border: 1px solid #dce3ea;
+      border-radius: 5px;
+      padding: 18px 24px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: box-shadow 0.15s;
+    }
+    .year-card:hover {
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    .year-card .year-label {
+      font-size: 17px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+    .year-card .year-sub {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<br><br>
+<div class="container">
+  <div class="panel panel-primary rounded-0" style="margin-bottom:0;">
+    <div class="panel-heading rounded-0">
+      <h6 class="panel-title" style="text-align:center;">Subject Grades</h6>
+      <p style="text-align:center; margin:6px 0 0; font-size:12px; color:rgba(255,255,255,0.85);">
+        Select an academic year to view its subjects and student grades
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;">
+    {% for y in years %}
+    <div class="year-card">
+      <div>
+        <div class="year-label">{{ y.label }}</div>
+        <div class="year-sub">View subjects and grades for {{ y.label }} students</div>
+      </div>
+      <a href="{% url 'admin-subject-grades-year' y.year %}"
+         class="btn btn-primary btn-sm" style="border-radius:3px;">
+        <span class="glyphicon glyphicon-folder-open"></span> View Subjects
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<br><br><br><br>
+{% endblock content %}
